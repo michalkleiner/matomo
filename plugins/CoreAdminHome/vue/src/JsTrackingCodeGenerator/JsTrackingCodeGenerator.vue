@@ -619,6 +619,15 @@ export default defineComponent({
 
       return getHostNameFromUrl(siteUrl);
     },
+    currentSiteHostNonWWW() {
+      let siteUrlNonWWW = this.currentSiteHost;
+
+      if (siteUrlNonWWW.startsWith('www.')) {
+        siteUrlNonWWW = siteUrlNonWWW.substr(4);
+      }
+
+      return siteUrlNonWWW;
+    },
     currentSiteAlias() {
       const defaultAliasUrl = `x.${this.currentSiteHost}`;
       const alias = this.siteUrls[this.site.id]?.[1];
@@ -655,8 +664,8 @@ export default defineComponent({
     mergeSubdomainsDesc() {
       return translate(
         'CoreAdminHome_JSTracking_MergeSubdomainsDesc',
-        `x.${this.currentSiteHost}`,
-        `y.${this.currentSiteHost}`,
+        `x.${this.currentSiteHostNonWWW}`,
+        `y.${this.currentSiteHostNonWWW}`,
       );
     },
     learnMoreText() {
