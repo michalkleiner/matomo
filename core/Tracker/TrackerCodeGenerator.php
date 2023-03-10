@@ -15,6 +15,7 @@ use Piwik\Plugin\Manager;
 use Piwik\Plugins\CustomVariables\CustomVariables;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\SettingsPiwik;
+use Piwik\Url;
 use Piwik\View;
 
 /**
@@ -260,6 +261,18 @@ class TrackerCodeGenerator
         return DbHelper::wasMatomoInstalledBeforeVersion('3.7.0-b1');
     }
 
+
+    /**
+     * Generate JS Tracking code options
+     *
+     * When treating hosts/domains starting with www subdomain, we remove the www subdomain when creating
+     * the base domain for the wildcard entries, i.e. www.example.com would form *.example.com.
+     *
+     * @param $idSite
+     * @param $mergeSubdomains
+     * @param $mergeAliasUrls
+     * @return string
+     */
     private function getJavascriptTagOptions($idSite, $mergeSubdomains, $mergeAliasUrls)
     {
         try {
@@ -278,7 +291,7 @@ class TrackerCodeGenerator
             $referrerParsed = parse_url($site_url);
 
             if (!isset($firstHost) && isset($referrerParsed['host'])) {
-                $firstHost = $referrerParsed['host'];
+                $firstHost = Url::removeLeadingWww($referrerParsed['host']);
             }
 
             if (isset($referrerParsed['host'])) {
@@ -291,7 +304,7 @@ class TrackerCodeGenerator
             }
             
             if (!empty($url)) {
-                $websiteHosts[] = $url;
+                $websiteHosts[] = Url::removeLeadingWww($url);
             }
         }
         $options = '';
