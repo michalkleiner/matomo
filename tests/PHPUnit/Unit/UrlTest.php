@@ -470,6 +470,32 @@ class UrlTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedUrl, Url::getCurrentUrl());
     }
 
+    /**
+     * Dataprovider for testRemoveLeadingWww
+     */
+    public function removeLeadingWwwProvider()
+    {
+        return [
+            ['www.example.com', 'example.com'],
+            ['example.com', 'example.com'],
+            ['wwwexample.com', 'wwwexample.com'],
+            ['test.example.com', 'test.example.com'],
+            ['test.www.example.com', 'test.www.example.com'],
+            ['www.test.www.example.com', 'test.www.example.com'],
+            ['https://www.example.com', 'https://www.example.com'],
+        ];
+    }
+
+    /**
+     * Tests the removal of the leading www. from a host name (doesn't work on URLs with protocol)
+     *
+     * @dataProvider removeLeadingWwwProvider
+     */
+    public function testRemoveLeadingWww($host, $expected)
+    {
+        $this->assertEquals($expected, Url::removeLeadingWww($host));
+    }
+
     private function resetGlobalVariables()
     {
         $names = ['PATH_INFO', 'REQUEST_URI', 'SCRIPT_NAME', 'SCRIPT_FILENAME', 'argv', 'HTTPS',
