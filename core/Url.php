@@ -829,4 +829,24 @@ class Url
         }
         return $host;
     }
+
+    /**
+     * Removes the leading www. part of a host name if present, otherwise returns unchanged.
+     *
+     * NOTE: At the moment, this only naively removes the leading www., so the assumption is that only a host name
+     * is passed in, no protocol. If a URL with a protocol is passed in, we don't deconstruct the URL
+     * to parts and only work with the actual host part of it. This can be added if needed as an enhancement.
+     *
+     * @param string $host eg. `www.example.com`
+     * @return string eg. `example.com`
+     * @api
+     */
+    public static function removeLeadingWww(string $host): string
+    {
+        if (stripos($host, 'www.') === 0) {
+            return substr($host, 4);
+        }
+
+        return $host;
+    }
 }
