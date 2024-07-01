@@ -83,20 +83,20 @@ jobs:
         run: |
           git push origin $NEW_BRANCH
 
-      - name: Import GPG key
-        id: import_gpg
-        run: |
-          echo "${{ secrets.GPG_CERTIFICATE }}" > $HOME/private.asc
-          gpg --import --batch --yes $HOME/private.asc
-          echo "default-cache-ttl 7200
-          max-cache-ttl 31536000
-          allow-preset-passphrase" > $HOME/.gnupg/gpg-agent.conf
-          keygrip=$(gpg --import --import-options show-only --with-keygrip $HOME/private.asc | grep "Keygrip" | grep -oP "([A-F0-9]+)" | head -1)
-          hexPassphrase=$( echo -n '${{ secrets.GPG_CERTIFICATE_PASS }}' | od -A n -t x1 -w100 | sed 's/ *//g' )
-          gpg-connect-agent "RELOADAGENT" /bye
-          gpg-connect-agent "PRESET_PASSPHRASE ${keygrip} -1 ${hexPassphrase}" /bye
-          gpg-connect-agent "KEYINFO ${keygrip}" /bye
-
+#      - name: Import GPG key
+#        id: import_gpg
+#        run: |
+#          echo "${{ secrets.GPG_CERTIFICATE }}" > $HOME/private.asc
+#          gpg --import --batch --yes $HOME/private.asc
+#          echo "default-cache-ttl 7200
+#          max-cache-ttl 31536000
+#          allow-preset-passphrase" > $HOME/.gnupg/gpg-agent.conf
+#          keygrip=$(gpg --import --import-options show-only --with-keygrip $HOME/private.asc | grep "Keygrip" | grep -oP "([A-F0-9]+)" | head -1)
+#          hexPassphrase=$( echo -n '${{ secrets.GPG_CERTIFICATE_PASS }}' | od -A n -t x1 -w100 | sed 's/ *//g' )
+#          gpg-connect-agent "RELOADAGENT" /bye
+#          gpg-connect-agent "PRESET_PASSPHRASE ${keygrip} -1 ${hexPassphrase}" /bye
+#          gpg-connect-agent "KEYINFO ${keygrip}" /bye
+#
       - name: Create tag, build and publish release
         id: tag
         run: |
