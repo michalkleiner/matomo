@@ -68,6 +68,7 @@ jobs:
 
       - name: Create a new branch
         run: |
+          echo $GITHUB_OUTPUT
           git checkout -b $PREVIEW_BRANCH
         env:
           PREVIEW_BRANCH: ${{ steps.vars.outputs.preview_branch }}
