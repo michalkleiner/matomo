@@ -34,6 +34,7 @@ jobs:
 
       - name: Check if there are any changes to release
         run: |
+          git fetch --prune
           CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
           if [ "$CHANGED_FILES" -eq 0 ]; then
             echo "No changes since last preview version was created"
@@ -94,7 +95,7 @@ jobs:
 
       - name: Merge into 5.x-preview
         run: |
-          git checkout -B 5.x-preview refs/remotes/origin/5.x-preview
+          git checkout -B 5.x-preview
           git merge --squash $PREVIEW_BRANCH
           git commit -m "Update version to ${NEW_VERSION}"
           git push --set-upstream origin 5.x-preview
