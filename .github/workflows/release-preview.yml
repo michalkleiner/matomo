@@ -32,8 +32,15 @@ jobs:
         with:
           lfs: false
 
+      - name: Check if there are any changes to release
+        run: |
+          CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
+          if [ "$CHANGED_FILES" -eq 0 ]; then
+            echo "No changes since last preview version was created"
+            exit 0
+          fi
+
       - name: Determine new preview version number
-        id: versions
         run: |
           OLD_VERSION=$(php -r "include_once 'core/Version.php'; echo \Piwik\Version::VERSION;")
           NEW_VERSION=$(php -r "include_once 'core/Version.php'; \$v = new \Piwik\Version(); echo \$v->nextPreviewVersion(\Piwik\Version::VERSION);")
@@ -83,6 +90,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+#      - name: Run tests for preview version branch
+
+      - name: Merge into 5.x-preview
+        run: |
+          git checkout 5.x-preview
+          git merge --squash $PREVIEW_BRANCH
+          git commit -m "Update version to ${NEW_VERSION}"
+          git push --set-upstream origin 5.x-preview
+
+      - name: Delete temporary release branch
+        run: |
+          git branch -d $PREVIEW_BRANCH
+          git push origin --delete $PREVIEW_BRANCH
+
 #      - name: Import GPG key
 #        id: import_gpg
 #        run: |
@@ -116,9 +137,6 @@ jobs:
           git tag $NEW_VERSION
           git push origin tags/$NEW_VERSION
 
-          echo "update=false" >> $GITHUB_OUTPUT
-          echo "prerelease=true" >> $GITHUB_OUTPUT
-
           body="## Matomo ${version} (Pre-release)
 
           We recommend to read [this FAQ](https://matomo.org/faq/how-to-update/faq_159/) before using a pre-release in a production environment.
@@ -138,24 +156,11 @@ jobs:
           ./.github/scripts/build-package.sh $NEW_VERSION
         shell: bash
 
-      - name: Merge into 5.x-preview
-        run: |
-          git checkout 5.x-preview
-          git merge --squash $PREVIEW_BRANCH
-          git commit -m "Update version to ${NEW_VERSION}"
-          git push --set-upstream origin 5.x-preview
-
-      - name: Delete temporary release branch
-        run: |
-          git checkout 5.x-dev
-          git branch -d $PREVIEW_BRANCH
-          git push origin --delete $PREVIEW_BRANCH
-
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "archives/matomo-${{ steps.tag.outputs.version }}.*,archives/piwik-${{ steps.tag.outputs.version }}.*"
-          allowUpdates: ${{ steps.tag.outputs.update }}
+          allowUpdates: false
           tag: ${{ steps.tag.outputs.version }}
           body: "${{ steps.tag.outputs.body }}"
-          prerelease: ${{ steps.tag.outputs.prerelease }}
+          prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
