@@ -51,7 +51,9 @@ jobs:
 
       - name: Check if there are any changes to release
         run: |
-          git fetch
+          git fetch -q 2>/dev/null
+          git checkout -B 5.x-preview
+          git checkout -B 5.x-dev
           
           LAST_MSG=$(git log -1 --pretty=format:"%s" 5.x-preview)
           PATTERN="^Update version to"
