@@ -7,7 +7,7 @@
 
 shopt -s extglob
 
-URL_REPO=https://github.com/matomo-org/matomo.git
+URL_REPO=https://github.com/michalkleiner/matomo.git
 
 LOCAL_REPO="matomo_last_version_git"
 LOCAL_ARCH="archives"
