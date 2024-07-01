@@ -51,7 +51,7 @@ jobs:
 
       - name: Check if there are any changes to release
         run: |
-          git fetch -q 2>/dev/null
+          git fetch
           
           LAST_MSG=$(git log -1 --pretty=format:"%s" 5.x-preview)
           PATTERN="^Update version to"
@@ -90,7 +90,7 @@ jobs:
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
           cat core/Version.php
 
-      - name: Commit changes
+      - name: Commit version file changes
         run: |
           git add core/Version.php
           git commit -m "Update version to ${NEW_VERSION}"
@@ -108,7 +108,7 @@ jobs:
           git commit -m "Update version to ${NEW_VERSION}"
           git push --set-upstream origin 5.x-preview
 
-      - name: Delete temporary release branch
+      - name: Delete temporary preview release branch
         run: |
           git branch -d $PREVIEW_BRANCH
           git push origin --delete $PREVIEW_BRANCH
