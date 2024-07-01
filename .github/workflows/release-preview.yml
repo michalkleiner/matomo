@@ -51,6 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if there are any changes to release
+        id: changes
         run: |
           git fetch origin 5.x-preview
           
@@ -64,16 +65,23 @@ jobs:
           
           if [ "$CHANGED_FILES" -eq 0 ]; then
             echo "No changes since last preview version was created"
-            exit 0
+            DO_RELEASE=0
+          else
+            DO_RELEASE=1
           fi
+          
+          echo "do_release=$DO_RELEASE" >> $GITHUB_OUTPUT
 
       - name: Determine new preview version number
+        id: version
         run: |
           OLD_VERSION=$(php -r "include_once 'core/Version.php'; echo \Piwik\Version::VERSION;")
           NEW_VERSION=$(php -r "include_once 'core/Version.php'; \$v = new \Piwik\Version(); echo \$v->nextPreviewVersion(\Piwik\Version::VERSION);")
           
           if [ "$NEW_VERSION" == "" ]; then
-            exit 1
+            HAS_NEW_VERSION=0
+          else
+            HAS_NEW_VERSION=1
           fi
           
           PREVIEW_BRANCH="preview-${NEW_VERSION}"
@@ -81,28 +89,36 @@ jobs:
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "PREVIEW_BRANCH=$PREVIEW_BRANCH" >> $GITHUB_ENV
+          
+          echo "has_new_version=$HAS_NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create a new branch
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           git checkout -b $PREVIEW_BRANCH
 
       - name: Update version
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
           cat core/Version.php
 
       - name: Commit version file changes
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           git add core/Version.php
           git commit -m "Update version to ${NEW_VERSION}"
 
       - name: Push changes
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           git push --set-upstream origin $PREVIEW_BRANCH
 
 #      - name: Run tests for preview version branch
+#      if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
 
       - name: Merge into 5.x-preview
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           git checkout -B 5.x-preview
           git merge --squash $PREVIEW_BRANCH
@@ -110,11 +126,13 @@ jobs:
           git push --set-upstream origin 5.x-preview
 
       - name: Delete temporary preview release branch
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           git branch -d $PREVIEW_BRANCH
           git push origin --delete $PREVIEW_BRANCH
 
 #      - name: Import GPG key
+#        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
 #        id: import_gpg
 #        run: |
 #          echo "${{ secrets.GPG_CERTIFICATE }}" > $HOME/private.asc
@@ -129,6 +147,7 @@ jobs:
 #          gpg-connect-agent "KEYINFO ${keygrip}" /bye
 #
       - name: Create tag, build and publish release
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         id: tag
         run: |
           echo "Version to build: '${NEW_VERSION}'"
@@ -165,6 +184,7 @@ jobs:
         shell: bash
 
       - uses: ncipollo/release-action@v1
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         with:
           artifacts: "archives/matomo-${{ steps.tag.outputs.version }}.*,archives/piwik-${{ steps.tag.outputs.version }}.*"
           allowUpdates: false
