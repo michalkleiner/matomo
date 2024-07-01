@@ -75,7 +75,7 @@ jobs:
       - name: Commit changes
         run: |
           git add core/Version.php
-          git commit -m "Update core Version file"
+          git commit -m "Update version to ${NEW_VERSION}"
 
       - name: Push changes
         run: |
@@ -138,10 +138,17 @@ jobs:
           ./.github/scripts/build-package.sh $NEW_VERSION
         shell: bash
 
+      - name: Merge into 5.x-preview
+        run: |
+          git checkout 5.x-preview
+          git merge --squash $PREVIEW_BRANCH
+          git commit -m "Update version to ${NEW_VERSION}"
+          git push --set-upstream origin 5.x-preview
+
       - name: Delete temporary release branch
         run: |
           git checkout 5.x-dev
-          git branch -D $PREVIEW_BRANCH
+          git branch -d $PREVIEW_BRANCH
           git push origin --delete $PREVIEW_BRANCH
 
       - uses: ncipollo/release-action@v1
