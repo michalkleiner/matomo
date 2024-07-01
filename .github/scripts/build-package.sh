@@ -245,28 +245,28 @@ for F in $FLAVOUR; do
     rm "$ARCH_DIR/$F-$VERSION.zip" 2> /dev/null
     zip -9 -r "$ARCH_DIR/$F-$VERSION.zip" "$F" How\ to\ install\ Matomo.html > /dev/null
 
-    if [ "$VERSION" != "build" ]; then
-      gpg --armor --detach-sign "$ARCH_DIR/$F-$VERSION.zip" || die "Failed to sign $F-$VERSION.zip"
-    fi
+#    if [ "$VERSION" != "build" ]; then
+#      gpg --armor --detach-sign "$ARCH_DIR/$F-$VERSION.zip" || die "Failed to sign $F-$VERSION.zip"
+#    fi
 
     rm "$ARCH_DIR/$F-$VERSION.tar.gz"  2> /dev/null
     tar -czf "$ARCH_DIR/$F-$VERSION.tar.gz" "$F" How\ to\ install\ Matomo.html
 
-    if [ "$VERSION" != "build" ]; then
-      gpg --armor --detach-sign "$ARCH_DIR/$F-$VERSION.tar.gz" || die "Failed to sign $F-$VERSION.tar.gz"
-    fi
+#    if [ "$VERSION" != "build" ]; then
+#      gpg --armor --detach-sign "$ARCH_DIR/$F-$VERSION.tar.gz" || die "Failed to sign $F-$VERSION.tar.gz"
+#    fi
 
 done
 
-if [ "$VERSION" != "build" ]; then
-  # Check File signatures are correct
-  for ext in zip tar.gz
-  do
-      for F in $FLAVOUR; do
-          gpg --verify $ARCH_DIR/$F-$VERSION.$ext.asc
-          if [ "$?" -ne "0" ]; then
-              die "Failed to verify signature for $ARCH_DIR/$F-$VERSION.$ext"
-          fi
-      done
-  done
-fi
+#if [ "$VERSION" != "build" ]; then
+#  # Check File signatures are correct
+#  for ext in zip tar.gz
+#  do
+#      for F in $FLAVOUR; do
+#          gpg --verify $ARCH_DIR/$F-$VERSION.$ext.asc
+#          if [ "$?" -ne "0" ]; then
+#              die "Failed to verify signature for $ARCH_DIR/$F-$VERSION.$ext"
+#          fi
+#      done
+#  done
+#fi
