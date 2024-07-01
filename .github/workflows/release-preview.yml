@@ -25,7 +25,7 @@ on:
       - 5.x-dev
 
 jobs:
-  release:
+  preview-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +33,7 @@ jobs:
           lfs: false
 
       - name: Determine new preview version number
+        id: versions
         run: |
           OLD_VERSION=$(php -r "include_once 'core/Version.php'; echo \Piwik\Version::VERSION;")
           NEW_VERSION=$(php -r "include_once 'core/Version.php'; \$v = new \Piwik\Version(); echo \$v->nextPreviewVersion(\Piwik\Version::VERSION);")
@@ -43,10 +44,6 @@ jobs:
           
           PREVIEW_BRANCH="preview-${NEW_VERSION}"
           
-          echo "old_version=$OLD_VERSION"
-          echo "new_version=$NEW_VERSION"
-          echo "preview_branch=$PREVIEW_BRANCH"
-
           echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "preview_branch=$PREVIEW_BRANCH" >> $GITHUB_OUTPUT
@@ -71,15 +68,15 @@ jobs:
           echo $GITHUB_OUTPUT
           git checkout -b $PREVIEW_BRANCH
         env:
-          PREVIEW_BRANCH: ${{ steps.vars.outputs.preview_branch }}
+          PREVIEW_BRANCH: ${{ steps.versions.outputs.preview_branch }}
 
       - name: Update version
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
           cat core/Version.php
         env:
-          OLD_VERSION: ${{ steps.vars.outputs.old_version }}
-          NEW_VERSION: ${{ steps.vars.outputs.new_version }}
+          OLD_VERSION: ${{ steps.versions.outputs.old_version }}
+          NEW_VERSION: ${{ steps.versions.outputs.new_version }}
 
       - name: Commit changes
         run: |
@@ -112,7 +109,7 @@ jobs:
           echo "Version to build: '${NEW_VERSION}'"
 
           git fetch --tags -q 2>/dev/null
-          tag_exists=$( git tag --list "$version" )
+          tag_exists=$( git tag --list "$NEW_VERSION" )
 
           if [[ -n "$tag_exists" ]]
           then
@@ -120,10 +117,10 @@ jobs:
             exit 1
           fi
 
-          echo "Creating a tag for $version"
+          echo "Creating a tag for $NEW_VERSION"
 
-          git tag $version
-          git push origin tags/$version
+          git tag $NEW_VERSION
+          git push origin tags/$NEW_VERSION
 
           echo "update=false" >> $GITHUB_OUTPUT
           echo "prerelease=true" >> $GITHUB_OUTPUT
@@ -137,15 +134,17 @@ jobs:
            - Latest stable production release can be found at https://matomo.org/download/ ([learn more](https://matomo.org/docs/installation/)) (recommended)
            - Beta and Release Candidate releases can be found at https://builds.matomo.org/ ([learn more](https://matomo.org/faq/how-to-update/faq_159/))"
 
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo 'body<<EOF' >> $GITHUB_OUTPUT
           echo "$body" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
           cd $GITHUB_WORKSPACE
           chmod 755 ./.github/scripts/*.sh
-          ./.github/scripts/build-package.sh $version
+          ./.github/scripts/build-package.sh $NEW_VERSION
         shell: bash
+        env:
+          NEW_VERSION: ${{ steps.versions.outputs.new_version }}
 
       - name: Delete temporary release branch
         run: |
@@ -153,7 +152,7 @@ jobs:
           git branch -D $PREVIEW_BRANCH
           git push origin --delete $PREVIEW_BRANCH
         env:
-          PREVIEW_BRANCH: ${{ steps.vars.outputs.preview_branch }}
+          PREVIEW_BRANCH: ${{ steps.versions.outputs.preview_branch }}
 
       - uses: ncipollo/release-action@v1
         with:
