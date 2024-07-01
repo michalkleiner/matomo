@@ -54,15 +54,16 @@ jobs:
         id: changes
         run: |
           git fetch origin 5.x-preview -g 2>/dev/null
-          git checkout -B 5.x-preview
           
-          LAST_MSG=$(git log -1 --pretty=format:"%s")
+          LAST_MSG=$(git log -1 5.x-preview --pretty=format:"%s")
           echo $LAST_MSG
           PATTERN="^Update version to"
           if [[ "$LAST_MSG" =~ $PATTERN ]]; then
+             echo 'matching pattern'
              git diff --name-only 5.x-dev 5.x-preview^1
              CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
           else
+             echo 'non-matching pattern'
              git diff --name-only 5.x-dev 5.x-preview
              CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview | wc -l)
           fi
