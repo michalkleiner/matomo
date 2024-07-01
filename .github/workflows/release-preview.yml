@@ -41,8 +41,15 @@ jobs:
             exit 1
           fi
           
+          PREVIEW_BRANCH="preview-${NEW_VERSION}"
+          
+          echo "old_version=$OLD_VERSION"
+          echo "new_version=$NEW_VERSION"
+          echo "preview_branch=$PREVIEW_BRANCH"
+
           echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "preview_branch=$PREVIEW_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Prepare git config
         run: |
@@ -61,13 +68,14 @@ jobs:
 
       - name: Create a new branch
         run: |
-          git checkout -b "preview-${NEW_VERSION}"
+          git checkout -b $PREVIEW_BRANCH
         env:
-          NEW_VERSION: ${{ steps.vars.outputs.new_version }}
+          PREVIEW_BRANCH: ${{ steps.vars.outputs.preview_branch }}
 
       - name: Update version
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
+          cat core/Version.php
         env:
           OLD_VERSION: ${{ steps.vars.outputs.old_version }}
           NEW_VERSION: ${{ steps.vars.outputs.new_version }}
@@ -137,6 +145,15 @@ jobs:
           chmod 755 ./.github/scripts/*.sh
           ./.github/scripts/build-package.sh $version
         shell: bash
+
+      - name: Delete temporary release branch
+        run: |
+          git checkout 5.x-dev
+          git branch -D $PREVIEW_BRANCH
+          git push origin --delete $PREVIEW_BRANCH
+        env:
+          PREVIEW_BRANCH: ${{ steps.vars.outputs.preview_branch }}
+
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "archives/matomo-${{ steps.tag.outputs.version }}.*,archives/piwik-${{ steps.tag.outputs.version }}.*"
