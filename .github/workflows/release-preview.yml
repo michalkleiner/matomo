@@ -94,8 +94,7 @@ jobs:
 
       - name: Merge into 5.x-preview
         run: |
-          git fetch
-          git checkout 5.x-preview
+          git checkout -B 5.x-preview refs/remotes/origin/5.x-preview
           git merge --squash $PREVIEW_BRANCH
           git commit -m "Update version to ${NEW_VERSION}"
           git push --set-upstream origin 5.x-preview
