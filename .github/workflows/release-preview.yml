@@ -44,9 +44,9 @@ jobs:
           
           PREVIEW_BRANCH="preview-${NEW_VERSION}"
           
-          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "preview_branch=$PREVIEW_BRANCH" >> $GITHUB_OUTPUT
+          echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "PREVIEW_BRANCH=$PREVIEW_BRANCH" >> $GITHUB_ENV
 
       - name: Prepare git config
         run: |
@@ -65,18 +65,12 @@ jobs:
 
       - name: Create a new branch
         run: |
-          echo $GITHUB_OUTPUT
           git checkout -b $PREVIEW_BRANCH
-        env:
-          PREVIEW_BRANCH: ${{ steps.versions.outputs.preview_branch }}
 
       - name: Update version
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
           cat core/Version.php
-        env:
-          OLD_VERSION: ${{ steps.versions.outputs.old_version }}
-          NEW_VERSION: ${{ steps.versions.outputs.new_version }}
 
       - name: Commit changes
         run: |
@@ -84,10 +78,10 @@ jobs:
           git commit -m "Update core Version file"
 
       - name: Push changes
+        run: |
+          git push --set-upstream origin $PREVIEW_BRANCH
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push --set-upstream origin $NEW_BRANCH 
 
 #      - name: Import GPG key
 #        id: import_gpg
@@ -143,16 +137,12 @@ jobs:
           chmod 755 ./.github/scripts/*.sh
           ./.github/scripts/build-package.sh $NEW_VERSION
         shell: bash
-        env:
-          NEW_VERSION: ${{ steps.versions.outputs.new_version }}
 
       - name: Delete temporary release branch
         run: |
           git checkout 5.x-dev
           git branch -D $PREVIEW_BRANCH
           git push origin --delete $PREVIEW_BRANCH
-        env:
-          PREVIEW_BRANCH: ${{ steps.versions.outputs.preview_branch }}
 
       - uses: ncipollo/release-action@v1
         with:
