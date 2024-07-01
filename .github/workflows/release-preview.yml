@@ -32,10 +32,35 @@ jobs:
         with:
           lfs: false
 
+      - name: Prepare git config
+        run: |
+          cat <<- EOF > $HOME/.netrc
+            machine github.com
+            login $GITHUB_ACTOR
+            password $GITHUB_TOKEN
+            machine api.github.com
+            login $GITHUB_ACTOR
+            password $GITHUB_TOKEN
+          EOF
+          chmod 600 $HOME/.netrc
+          git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --global user.name "$GITHUB_ACTOR"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Check if there are any changes to release
         run: |
-          git fetch --prune
-          CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
+          git fetch -q 2>/dev/null
+          
+          LAST_MSG=$(git log -1 --pretty=format:"%s" 5.x-preview)
+          PATTERN="^Update version to"
+          if [[ "$LAST_MSG" =~ $PATTERN ]]; then
+             CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
+          else
+             CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview | wc -l)
+          fi
+          
           if [ "$CHANGED_FILES" -eq 0 ]; then
             echo "No changes since last preview version was created"
             exit 0
@@ -55,23 +80,6 @@ jobs:
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "PREVIEW_BRANCH=$PREVIEW_BRANCH" >> $GITHUB_ENV
-
-      - name: Prepare git config
-        run: |
-          cat <<- EOF > $HOME/.netrc
-            machine github.com
-            login $GITHUB_ACTOR
-            password $GITHUB_TOKEN
-            machine api.github.com
-            login $GITHUB_ACTOR
-            password $GITHUB_TOKEN
-          EOF
-          chmod 600 $HOME/.netrc
-          git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git config --global user.name "$GITHUB_ACTOR"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a new branch
         run: |
@@ -124,10 +132,8 @@ jobs:
         run: |
           echo "Version to build: '${NEW_VERSION}'"
 
-          git fetch --tags -q 2>/dev/null
-          tag_exists=$( git tag --list "$NEW_VERSION" )
-
-          if [[ -n "$tag_exists" ]]
+          TAG_EXISTS=$( git tag --list "$NEW_VERSION" )
+          if [[ -n "$TAG_EXISTS" ]]
           then
             echo "A tag for $tag_exists already exists."
             exit 1
