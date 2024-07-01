@@ -69,6 +69,8 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git config --global user.name "$GITHUB_ACTOR"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a new branch
         run: |
@@ -87,13 +89,12 @@ jobs:
       - name: Push changes
         run: |
           git push --set-upstream origin $PREVIEW_BRANCH
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #      - name: Run tests for preview version branch
 
       - name: Merge into 5.x-preview
         run: |
+          git fetch
           git checkout 5.x-preview
           git merge --squash $PREVIEW_BRANCH
           git commit -m "Update version to ${NEW_VERSION}"
