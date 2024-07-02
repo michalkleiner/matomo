@@ -54,19 +54,19 @@ jobs:
       - name: Check if there are any changes to create a preview release for
         id: changes
         run: |
-          git fetch origin 5.x-preview 5.x-dev -g 2>/dev/null
+          git fetch origin 5.x-preview 5.x-dev -q
           
           LAST_MSG=$(git log -1 5.x-preview --pretty=format:"%s")
           echo $LAST_MSG
           PATTERN="^Update version to"
           if [[ "$LAST_MSG" =~ $PATTERN ]]; then
-             echo 'matching pattern'
-             DIFF=$(git diff 5.x-dev..5.x-preview^1)
+            echo 'matching pattern'
+            DIFF=$(git diff 5.x-dev..5.x-preview^1)
           else
-             echo 'non-matching pattern'
-             DIFF=$(git diff 5.x-dev..5.x-preview)
+            echo 'non-matching pattern'
+            DIFF=$(git diff 5.x-dev..5.x-preview)
           fi
-          echo $CHANGED_FILES
+          echo $DIFF
           
           if [ -z "$DIFF" ]; then
             echo "No changes since last preview version was created"
