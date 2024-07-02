@@ -123,7 +123,7 @@ jobs:
       - name: Merge into 5.x-preview
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
-          git checkout -B 5.x-preview
+          git checkout -f 5.x-preview
           git merge --squash $PREVIEW_BRANCH
           git commit -m "Update version to ${NEW_VERSION}"
           git push --set-upstream origin 5.x-preview
