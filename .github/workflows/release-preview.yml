@@ -54,17 +54,15 @@ jobs:
       - name: Check if there are any changes to create a preview release for
         id: changes
         run: |
-          git fetch origin 5.x-preview 5.x-dev -q
-          
-          LAST_MSG=$(git log -1 5.x-preview --pretty=format:"%s")
+          LAST_MSG=$(git log -1 origin/5.x-preview --pretty=format:"%s")
           echo $LAST_MSG
           PATTERN="^Update version to"
           if [[ "$LAST_MSG" =~ $PATTERN ]]; then
             echo 'matching pattern'
-            DIFF=$(git diff 5.x-dev..5.x-preview^1)
+            DIFF=$(git diff origin/5.x-dev..origin/5.x-preview^1)
           else
             echo 'non-matching pattern'
-            DIFF=$(git diff 5.x-dev..5.x-preview)
+            DIFF=$(git diff origin/5.x-dev..origin/5.x-preview)
           fi
           echo $DIFF
           
@@ -80,8 +78,6 @@ jobs:
       - name: Determine new preview version number
         id: version
         run: |
-          git checkout 5.x-dev
-          
           OLD_VERSION=$(php -r "include_once 'core/Version.php'; echo \Piwik\Version::VERSION;")
           NEW_VERSION=$(php -r "include_once 'core/Version.php'; \$v = new \Piwik\Version(); echo \$v->nextPreviewVersion(\Piwik\Version::VERSION);")
           
