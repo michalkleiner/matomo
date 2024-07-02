@@ -98,7 +98,9 @@ jobs:
       - name: Create a new branch
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
+          git checkout 5.x-preview
           git checkout -b $PREVIEW_BRANCH
+          git merge 5.x-dev
 
       - name: Update version
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
