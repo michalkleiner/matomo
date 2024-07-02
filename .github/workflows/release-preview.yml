@@ -32,6 +32,7 @@ jobs:
         with:
           lfs: false
           fetch-tags: true
+          fetch-depth: 0
 
       - name: Prepare git config
         run: |
@@ -50,26 +51,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if there are any changes to release
+      - name: Check if there are any changes to create a preview release for
         id: changes
         run: |
-          git fetch origin 5.x-preview -g 2>/dev/null
+          git fetch origin 5.x-preview 5.x-dev -g 2>/dev/null
           
           LAST_MSG=$(git log -1 5.x-preview --pretty=format:"%s")
           echo $LAST_MSG
           PATTERN="^Update version to"
           if [[ "$LAST_MSG" =~ $PATTERN ]]; then
              echo 'matching pattern'
-             git diff --name-only 5.x-dev 5.x-preview^1
-             CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview^1 | wc -l)
+             DIFF=$(git diff 5.x-dev..5.x-preview^1)
           else
              echo 'non-matching pattern'
-             git diff --name-only 5.x-dev 5.x-preview
-             CHANGED_FILES=$(git diff --name-only 5.x-dev 5.x-preview | wc -l)
+             DIFF=$(git diff 5.x-dev..5.x-preview)
           fi
           echo $CHANGED_FILES
           
-          if [ "$CHANGED_FILES" -eq 0 ]; then
+          if [ -z "$DIFF" ]; then
             echo "No changes since last preview version was created"
             DO_RELEASE=0
           else
