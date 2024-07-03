@@ -63,7 +63,7 @@ jobs:
           fi
           
           if [ -z "$DIFF" ]; then
-            echo "No changes since last preview version was created"
+            echo "No changes in 5.x-dev since last preview version was created."
             DO_RELEASE=0
           else
             DO_RELEASE=1
