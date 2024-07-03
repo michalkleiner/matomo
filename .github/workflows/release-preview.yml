@@ -28,7 +28,9 @@ jobs:
   prepare_preview:
     runs-on: ubuntu-latest
     outputs:
-      do_release: ${{ steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1' }}
+      do_release: ${{ steps.changes.outputs.do_release }}
+      has_new_release: ${{ steps.version.outputs.has_new_version }}
+      new_version: ${{ steps.version.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -90,6 +92,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           
           echo "has_new_version=$HAS_NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update 5.x-preview branch to latest 5.x-dev
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
@@ -176,6 +179,8 @@ jobs:
           chmod 755 ./.github/scripts/*.sh
           ./.github/scripts/build-package.sh $NEW_VERSION
         shell: bash
+        env:
+          NEW_VERSION: ${{ needs.prepare_preview.outputs.new_version }}
 
       - uses: ncipollo/release-action@v1
         with:
