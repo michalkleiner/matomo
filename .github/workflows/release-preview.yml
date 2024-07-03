@@ -25,7 +25,7 @@ on:
       - 5.x-dev
 
 jobs:
-  preview-release:
+  release-preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,9 +114,10 @@ jobs:
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         id: trigger_tests
         run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/matomo-tests/dispatches \
             -d '{"ref":"5.x-preview"}'
 
