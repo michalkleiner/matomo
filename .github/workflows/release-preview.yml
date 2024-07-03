@@ -117,10 +117,7 @@ jobs:
 
   tests:
     needs: [prepare_preview]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Matomo tests
-        uses: ./.github/workflows/matomo-tests.yml
+    uses: ./.github/workflows/matomo-tests.yml
 
   release_preview:
     needs: [tests, prepare_preview]
