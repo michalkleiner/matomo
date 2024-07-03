@@ -57,7 +57,7 @@ jobs:
           LATEST_PREVIEW=$(git tag --sort=-creatordate | grep -E '\.[0-9]{14}$' | head -n 1)
           
           DIFF=""
-          if [ -z "$LATEST_PREVIEW" ]; then
+          if [ -n "$LATEST_PREVIEW" ]; then
             DIFF=$(git diff 5.x-dev..$LATEST_PREVIEW | grep -v "public const VERSION = ")
           fi
           echo $DIFF
