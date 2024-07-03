@@ -118,6 +118,8 @@ jobs:
   tests:
     needs: [prepare_preview]
     uses: ./.github/workflows/matomo-tests.yml
+    with:
+      fail_fast: true
 
   release_preview:
     needs: [tests, prepare_preview]
