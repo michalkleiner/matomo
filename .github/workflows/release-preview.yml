@@ -54,15 +54,11 @@ jobs:
       - name: Check if there are any changes to create a preview release for
         id: changes
         run: |
-          LAST_MSG=$(git log -1 origin/5.x-preview --pretty=format:"%s")
-          echo $LAST_MSG
-          PATTERN="^Update version to"
-          if [[ "$LAST_MSG" =~ $PATTERN ]]; then
-            echo 'matching pattern'
-            DIFF=$(git diff origin/5.x-dev..origin/5.x-preview^1)
-          else
-            echo 'non-matching pattern'
-            DIFF=$(git diff origin/5.x-dev..origin/5.x-preview)
+          LATEST_PREVIEW=$(git tag --sort=-creatordate | grep -E '\.[0-9]{14}$' | head -n 1)
+          
+          DIFF=""
+          if [ -z "$LATEST_PREVIEW" ]; then
+            DIFF=$(git diff 5.x-dev..$LATEST_PREVIEW | grep -v "public const VERSION = ")
           fi
           echo $DIFF
           
@@ -76,6 +72,7 @@ jobs:
           echo "do_release=$DO_RELEASE" >> $GITHUB_OUTPUT
 
       - name: Determine new preview version number
+        if: steps.changes.outputs.do_release == '1'
         id: version
         run: |
           OLD_VERSION=$(php -r "include_once 'core/Version.php'; echo \Piwik\Version::VERSION;")
@@ -87,22 +84,17 @@ jobs:
             HAS_NEW_VERSION=1
           fi
           
-          PREVIEW_BRANCH="preview-${NEW_VERSION}"
-          
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          echo "PREVIEW_BRANCH=$PREVIEW_BRANCH" >> $GITHUB_ENV
           
           echo "has_new_version=$HAS_NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create a new branch
+      - name: Update 5.x-preview branch to latest 5.x-dev
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
-          git checkout 5.x-preview
-          git checkout -b $PREVIEW_BRANCH
-          git merge 5.x-dev
+          git checkout -B 5.x-preview
 
-      - name: Update version
+      - name: Update version file with new version
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
@@ -114,27 +106,13 @@ jobs:
           git add core/Version.php
           git commit -m "Update version to ${NEW_VERSION}"
 
-      - name: Push changes
+      - name: Push changes to 5.x-preview
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
-          git push --set-upstream origin $PREVIEW_BRANCH
+          git push -f origin 5.x-preview
 
 #      - name: Run tests for preview version branch
 #      if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
-
-      - name: Merge into 5.x-preview
-        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
-        run: |
-          git checkout -f 5.x-preview
-          git merge --squash $PREVIEW_BRANCH
-          git commit -m "Update version to ${NEW_VERSION}"
-          git push --set-upstream origin 5.x-preview
-
-      - name: Delete temporary preview release branch
-        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
-        run: |
-          git branch -d $PREVIEW_BRANCH
-          git push origin --delete $PREVIEW_BRANCH
 
 #      - name: Import GPG key
 #        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
