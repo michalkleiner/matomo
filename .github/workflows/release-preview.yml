@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Matomo tests
-        uses: ./.github/workflows/matomo-tests
+        uses: ./.github/workflows/matomo-tests.yml
 
   release_preview:
     needs: [tests, prepare_preview]
