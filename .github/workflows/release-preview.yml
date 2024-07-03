@@ -110,8 +110,43 @@ jobs:
         run: |
           git push -f origin 5.x-preview
 
-#      - name: Run tests for preview version branch
-#      if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
+      - name: Trigger Matomo tests for preview version branch
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
+        id: trigger_tests
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/matomo-tests/dispatches \
+            -d '{"ref":"5.x-preview"}'
+
+      - name: Wait for Matomo tests workflow to complete
+        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
+        id: wait_workflow
+        run: |
+          sleep 10
+          runs=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/matomo-tests/runs?branch=5.x-preview)
+          
+          run_id=$(echo $runs | jq -r '.workflow_runs[0].id')
+          
+          conclusion="null"
+          while [ "$conclusion" == "null" ] || [ "$conclusion" == "in_progress" ] || [ "$conclusion" == "queued" ]; do
+            echo "Waiting for Matomo tests workflow to complete..."
+            sleep 30
+            run_status=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+             https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id)
+            conclusion=$(echo $run_status | jq -r '.conclusion')
+          done
+          
+          if [ "$conclusion" != "success" ]; then
+            echo "Matomo tests workflow failed"
+            exit 1
+          else
+            echo "Matomo tests workflow completed successfully"
+          fi          
 
 #      - name: Import GPG key
 #        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
