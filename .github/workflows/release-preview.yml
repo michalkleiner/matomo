@@ -119,12 +119,17 @@ jobs:
     needs: [prepare_preview]
     uses: ./.github/workflows/matomo-tests.yml
     with:
-      fail_fast: true
+      is_preview: true
 
   release_preview:
     needs: [tests, prepare_preview]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-tags: true
+          ref: '5.x-preview'
 
 #      - name: Import GPG key
 #        if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
