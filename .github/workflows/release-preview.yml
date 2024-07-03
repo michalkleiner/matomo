@@ -58,7 +58,8 @@ jobs:
           
           DIFF=""
           if [ -n "$LATEST_PREVIEW" ]; then
-            DIFF=$(git diff $LATEST_PREVIEW..5.x-dev --unified=0 | grep -vE '^\+\+\+|---' | grep '^[+-]' | grep -vE 'public const VERSION =')
+            # using || true to always exit either with a diff or a success exit code to not fail the whole workflow
+            DIFF=$(git diff $LATEST_PREVIEW..5.x-dev --unified=0 | grep -vE "^\+\+\+|---" | grep "^[+-]" | grep -v "public const VERSION = '.*';" || true)
           fi
           echo $DIFF
           
