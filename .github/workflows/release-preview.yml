@@ -25,7 +25,7 @@ on:
       - 5.x-dev
 
 jobs:
-  prepare_preview:
+  prepare_preview_version:
     runs-on: ubuntu-latest
     outputs:
       do_release: ${{ steps.changes.outputs.do_release }}
@@ -115,13 +115,13 @@ jobs:
         run: |
           git push -f origin 5.x-preview
 
-  tests:
+  run_matomo_tests:
     needs: [prepare_preview]
     uses: ./.github/workflows/matomo-tests.yml
     with:
       is_preview: true
 
-  release_preview:
+  release_preview_version:
     needs: [tests, prepare_preview]
     runs-on: ubuntu-latest
     steps:
