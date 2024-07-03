@@ -16,7 +16,7 @@ on:
   workflow_call:
     inputs:
       fail_fast:
-        required: true
+        required: false
         type: boolean
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
   PHP:
     runs-on: ubuntu-20.04
     strategy:
-      fail-fast: ${{ false || inputs.fail_fast }}
+      fail-fast: ${{ inputs.fail_fast == true }}
       matrix:
         type: [ 'UnitTests', 'SystemTestsPlugins', 'SystemTestsCore', 'IntegrationTestsCore', 'IntegrationTestsPlugins' ]
         php: [ '7.2', '8.2', '8.3' ]
@@ -111,7 +111,7 @@ jobs:
   UI:
     runs-on: ubuntu-20.04
     strategy:
-      fail-fast: ${{ false || inputs.fail_fast }}
+      fail-fast: ${{ inputs.fail_fast == true }}
       matrix:
         parts: [ 0,1,2,3 ]
     steps:
