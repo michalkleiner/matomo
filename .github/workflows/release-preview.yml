@@ -118,7 +118,6 @@ jobs:
   tests:
     needs: [prepare_preview]
     runs-on: ubuntu-latest
-    if: needs.prepare_preview.outputs.do_release == '1' && needs.prepare_preview.outputs.has_new_version == '1'
     steps:
       - name: Run Matomo tests
         uses: ./.github/workflows/matomo-tests
@@ -126,7 +125,6 @@ jobs:
   release_preview:
     needs: [tests, prepare_preview]
     runs-on: ubuntu-latest
-    if: needs.prepare_preview.outputs.do_release == '1' && needs.prepare_preview.outputs.has_new_version == '1'
     steps:
 
 #      - name: Import GPG key
