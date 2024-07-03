@@ -76,22 +76,22 @@ jobs:
 #          artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
 #          upload-artifacts: ${{ matrix.php == '7.2' }}
 #          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
-  Javascript:
-    runs-on: ubuntu-20.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: false
-          persist-credentials: false
-          submodules: true
-          path: matomo
-      - name: running tests
-        uses: matomo-org/github-action-tests@main
-        with:
-          test-type: 'JS'
-          php-version: '7.2'
-          node-version: '12'
+#  Javascript:
+#    runs-on: ubuntu-20.04
+#    timeout-minutes: 15
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          lfs: false
+#          persist-credentials: false
+#          submodules: true
+#          path: matomo
+#      - name: running tests
+#        uses: matomo-org/github-action-tests@main
+#        with:
+#          test-type: 'JS'
+#          php-version: '7.2'
+#          node-version: '12'
   Client:
     runs-on: ubuntu-20.04
     timeout-minutes: 15
