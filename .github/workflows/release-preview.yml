@@ -61,7 +61,6 @@ jobs:
             # using || true to always exit either with a diff or a success exit code to not fail the whole workflow
             DIFF=$(git diff $LATEST_PREVIEW..5.x-dev --unified=0 | grep -vE "^\+\+\+|---" | grep "^[+-]" | grep -v "public const VERSION = '.*';" || true)
           fi
-          echo $DIFF
           
           if [ -z "$DIFF" ]; then
             echo "No changes since last preview version was created"
@@ -99,7 +98,6 @@ jobs:
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
         run: |
           sed -i "s/VERSION = '${OLD_VERSION}';/VERSION = '${NEW_VERSION}';/g" core/Version.php
-          cat core/Version.php
 
       - name: Commit version file changes
         if: steps.changes.outputs.do_release == '1' && steps.version.outputs.has_new_version == '1'
