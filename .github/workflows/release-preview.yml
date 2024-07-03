@@ -20,9 +20,12 @@ permissions:
   statuses: none
 
 on:
+  # TODO: remove manual dispatch after testing and enable cron
   workflow_dispatch:
     branches:
       - 5.x-dev
+  #schedule:
+  #  - cron: '0 1 * * *' # 1am daily
 
 jobs:
   prepare_preview_version:
