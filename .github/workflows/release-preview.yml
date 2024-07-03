@@ -8,13 +8,13 @@
 name: Build preview release
 
 permissions:
-  actions: none
+  actions: read # required for the tests job
   checks: none
   contents: write  # required to create tag and release
   deployments: none
-  issues: none
+  issues: read # required for the tests job
   packages: none
-  pull-requests: none
+  pull-requests: read # required for the tests jobs
   repository-projects: none
   security-events: none
   statuses: none
